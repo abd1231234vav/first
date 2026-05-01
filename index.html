@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>First Game</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #07111f;
+      --bg-2: #123456;
+      --panel: rgba(9, 17, 31, 0.82);
+      --text: #f4f7fb;
+      --accent: #ffd166;
+      --accent-2: #7ae582;
+      --danger: #ff6b6b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255, 209, 102, 0.18), transparent 30%),
+        linear-gradient(160deg, var(--bg-1), var(--bg-2));
+    }
+
+    .game-shell {
+      width: min(92vw, 760px);
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(14px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: rgba(244, 247, 251, 0.78);
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      flex: 1 1 140px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .label {
+      display: block;
+      font-size: 0.85rem;
+      opacity: 0.72;
+    }
+
+    .value {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      overflow: hidden;
+      border-radius: 22px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(122, 229, 130, 0.12), rgba(255, 107, 107, 0.08));
+      background-size: 40px 40px, 40px 40px, auto;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: crosshair;
+    }
+
+    #target {
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      font-size: 2rem;
+      background: radial-gradient(circle at 30% 30%, #fff6bf, var(--accent));
+      box-shadow: 0 12px 24px rgba(255, 209, 102, 0.35);
+      cursor: pointer;
+      transition: transform 0.12s ease;
+    }
+
+    #target:hover {
+      transform: scale(1.06);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #08111f;
+      background: linear-gradient(135deg, var(--accent), #ffb703);
+      cursor: pointer;
+    }
+
+    #message {
+      margin: 0;
+      color: rgba(244, 247, 251, 0.84);
+    }
+
+    .tip {
+      margin-top: 16px;
+      font-size: 0.92rem;
+      color: rgba(244, 247, 251, 0.66);
+    }
+
+    @media (max-width: 640px) {
+      .game-shell {
+        padding: 18px;
+      }
+
+      #gameArea {
+        height: 360px;
+      }
+
+      #target {
+        width: 60px;
+        height: 60px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-shell">
+    <h1>Catch the Star</h1>
+    <p class="subtitle">Click the moving star before the 20 second timer runs out.</p>
+
+    <section class="hud" aria-label="Game stats">
+      <div class="card">
+        <span class="label">Score</span>
+        <span class="value" id="score">0</span>
+      </div>
+      <div class="card">
+        <span class="label">Time Left</span>
+        <span class="value" id="time">20</span>
+      </div>
+      <div class="card">
+        <span class="label">Best Score</span>
+        <span class="value" id="best">0</span>
+      </div>
+    </section>
+
+    <section id="gameArea" aria-label="Game area">
+      <button id="target" aria-label="Catch the star">⭐</button>
+    </section>
+
+    <div class="controls">
+      <button id="startButton" type="button">Start Game</button>
+      <p id="message">Press start, then catch as many stars as you can.</p>
+    </div>
+
+    <p class="tip">Each click speeds the star up a little, so the round gets harder as your score grows.</p>
+  </main>
+
+  <script>
+    const gameArea = document.getElementById("gameArea");
+    const target = document.getElementById("target");
+    const startButton = document.getElementById("startButton");
+    const scoreDisplay = document.getElementById("score");
+    const timeDisplay = document.getElementById("time");
+    const bestDisplay = document.getElementById("best");
+    const messageDisplay = document.getElementById("message");
+
+    let score = 0;
+    let timeLeft = 20;
+    let bestScore = Number(localStorage.getItem("first-best-score") || 0);
+    let gameRunning = false;
+    let moveIntervalId = null;
+    let timerIntervalId = null;
+
+    bestDisplay.textContent = bestScore;
+
+    function placeTarget() {
+      const areaRect = gameArea.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      const maxX = areaRect.width - targetRect.width;
+      const maxY = areaRect.height - targetRect.height;
+      const x = Math.max(0, Math.random() * maxX);
+      const y = Math.max(0, Math.random() * maxY);
+
+      target.style.left = `${x}px`;
+      target.style.top = `${y}px`;
+    }
+
+    function updateStats() {
+      scoreDisplay.textContent = score;
+      timeDisplay.textContent = timeLeft;
+      bestDisplay.textContent = bestScore;
+    }
+
+    function stopGame() {
+      gameRunning = false;
+      clearInterval(moveIntervalId);
+      clearInterval(timerIntervalId);
+      moveIntervalId = null;
+      timerIntervalId = null;
+      target.hidden = true;
+      messageDisplay.textContent = `Time up! Your score: ${score}. Press start to play again.`;
+      startButton.textContent = "Play Again";
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 20;
+      gameRunning = true;
+      target.hidden = false;
+      startButton.textContent = "Running...";
+      messageDisplay.textContent = "Catch the star as fast as you can.";
+      updateStats();
+      placeTarget();
+
+      moveIntervalId = setInterval(() => {
+        placeTarget();
+      }, 900);
+
+      timerIntervalId = setInterval(() => {
+        timeLeft -= 1;
+        updateStats();
+
+        if (timeLeft <= 0) {
+          stopGame();
+        }
+      }, 1000);
+    }
+
+    startButton.addEventListener("click", () => {
+      if (gameRunning) {
+        return;
+      }
+
+      startGame();
+    });
+
+    target.addEventListener("click", () => {
+      if (!gameRunning) {
+        return;
+      }
+
+      score += 1;
+
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("first-best-score", String(bestScore));
+      }
+
+      updateStats();
+      placeTarget();
+
+      const nextSpeed = Math.max(320, 900 - score * 35);
+      clearInterval(moveIntervalId);
+      moveIntervalId = setInterval(() => {
+        placeTarget();
+      }, nextSpeed);
+    });
+
+    target.hidden = true;
+    updateStats();
+  </script>
+</body>
+</html>
